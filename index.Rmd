@@ -1,5 +1,6 @@
 ---
-title: "IODS course project"
+title: "Quang's IODS coursework"
+author: "Nguyen Minh Quang"
 output:
   html_document:
     theme: cosmo
