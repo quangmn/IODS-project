@@ -3,7 +3,7 @@ title: "Quang's IODS coursework"
 author: "Nguyen Minh Quang"
 output:
   html_document:
-    theme: cosmo
+    theme: simplex
     toc: true
     toc_depth: 2
     fig_caption: true

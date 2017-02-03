@@ -1,7 +1,129 @@
-# Chapter 2. Regression and model validation
-*Describe the work you have done this week and summarize your learning.*
+# Chapter 2: Regression and model validation
 
-- Run RStudio, Github 
-- Learned the basic R codes from DataCamp  "R Short and Sweet"
-- Github
-    + how to
+```{r, echo= FALSE}
+learning2014 <- read.csv(file = "/Users/nguyenminhquang/Desktop/IODS-project/data/learn2014.csv", sep = "," , header = TRUE, fill = TRUE, quote = "\"", dec = ".")
+learning2014$X <- NULL
+```
+
+## Overview
+The data "learning2014" explores the relationship between learning approaches and grades of students. 
+
+The learning approaches are divided in three categories:
+
+(1) deep learning
+(2) surface learning
+(3) strategic learning
+
+"learning2014" contains 166 observations and 7 variables: age, attitude, gender, learning aprroaches (deep = deep, surface = surf and strategic = stra) and students' grades (=points). 
+
+```{r, echo= FALSE}
+str(learning2014)
+dim(learning2014)
+```
+
+## Graphical overview 
+The graph below gives hints of correlations between variables. 
+According to the graph, it seems that there are rather little correlations between the learning approaches, gender and age with the exam points. Contrary, the strongest correlation is between atttitude and points. 
+
+```{r, echo= FALSE}
+library(GGally)
+library(ggplot2)
+p <- ggpairs(learning2014, mapping = aes(col=gender, alpha = 0.3), lower = list(combo = wrap("facethist", bins = 20)))
+p
+```
+
+Several things we can tell from these graphs:
+- Male scores slightly higher than female students, but the range is wider
+- Attitude strongly correlates with grades
+- About learning stragies:
+  + Stragic learning has a positive impact on grade
+  + Surface learning has a negative impact on grade
+  + Deep learning doesn't have much impact on grade, the relationship is negative though
+
+## Variable overview
+
+gender: 110 female and 56 male students.
+```{r, echo= FALSE}
+summary(learning2014$gender)
+```
+
+age: the youngest respondents is 17-year-old, and oldest 55-year-old, mean age being 25,5-year-old. Age is not normally distributed since there are more young students than old ones. The rest of our  variables are normally distributed. 
+```{r, echo= FALSE}
+summary(learning2014$Age) 
+```
+
+Attitude towards statistics: the attitude is shown in likert-scale 1-5. 
+```{r, echo= FALSE}
+learning2014$attitude <- learning2014$Attitude / 10
+summary(learning2014$attitude)
+```
+
+Learning approaches (deep, strategic and surface) are each measusered in likert-scale 1-5:
+
+deep learning approach: 
+```{r, echo= FALSE}
+summary(learning2014$deep)
+```
+strategic learning approach: 
+```{r, echo= FALSE}
+summary(learning2014$stra)
+```
+surface learning approach: 
+```{r, echo= FALSE}
+summary(learning2014$surf)
+```
+
+Exam points: min = 7 and the max = 33 points. Median value is approximately 23. 
+```{r, echo= FALSE}
+summary(learning2014$Points)
+```
+
+
+These examples plotting the relationship between Attitude, surface learning and scores, respectively: 
+
+```{r, echo=FALSE}
+library(ggplot2)
+p1 <- ggplot(learning2014, aes(x = learning2014$Attitude, y = learning2014$Points, col = learning2014$gender))
+p2 <- p1 + geom_point()
+p3 <- p2 + geom_smooth(method = "lm")
+p4 <- p3 + ggtitle("Student's attitude versus exam points")
+print(p4)
+p5 <- ggplot(learning2014, aes(x = surf, y = Age, col = gender))
+p6 <- p5 + geom_point()
+p7 <- p6 + geom_smooth(method = "lm")
+p8 <- p7 + ggtitle("Student's learning approach (surface) versus age")
+p8
+```
+From the plot it seems attitude has a strong positive relationship with scores, while age has slightly negative relationship. 
+
+## Regression analysis
+
+Model1 (below) shows the effects of attitude, strategic learning and surface learning on exam grades:
+
+```{r, echo=FALSE}
+library(GGally)
+library(ggplot2)
+model1 <- lm(Points ~ Attitude + stra + surf, data = learning2014)
+summary(model1)
+```
+
+Since "stra" and "surf" don't have statistically significant impact on grades, we gonna exclude them from model1:
+
+```{r, recho=FALSE}
+model2 <- lm(Points ~ Attitude, data = learning2014)
+summary(model2)
+```
+
+In Model2, attitude has great positive impact on grades, and this relationship is statistically significant (r=0.35, P<0.01). The multiple R-squared of model2 is 0.19 (19%). In other words, Attitude explains 19% of variation in points.
+
+## Model Validation
+Plots: (1) Residuals vs Fitted values, (2) Normal QQ-plot and (3) Residuals vs Leverage.
+
+```{r, echo=FALSE}
+plot(model2, which = c(1,2,5), par(mfrow = c(2,2)))
+```
+From the graph: 
+
+- Residuals vs Fitted values plot shows a symmetrical pattern. Our model is good then. 
+- Normal QQ-plot Plot shows that residuals are lined well on the straight dashed line, which means that they are quite normally distributed. 
+- Residual vs leverage plot shows possible influential cases. Levarage plot shows that there is no influential case, and we can be more confident with our model.  

@@ -1,0 +1,12 @@
+---
+title: "README"
+author: "Quang Nguyen"
+date: "1/21/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Course diary
