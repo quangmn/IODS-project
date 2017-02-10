@@ -1,0 +1,107 @@
+# Chapter3: Logistic Regression
+```{r, echo= FALSE}
+alc <- read.csv(file = "/Users/nguyenminhquang/Desktop/IODS-project/data/alc.csv", sep = "," , header = TRUE, fill = TRUE, quote = "\"", dec = ".")
+alc$X <- NULL
+library(dplyr) 
+library(ggplot2)
+names(alc)
+str(alc)
+```
+
+## Overview
+Our data includes 35 variables with 385 observations. 
+We want to study factors that might affect the study success.
+There are three types of variables: binary (marked with 'logi'); numeric (marked with 'num'  or 'int'); nominal (marked with 'factor') 
+
+## Hypotheses
+To study possible factors that might have relationship with high/low alcohol consumption, we selected  four variables: sex, goout, absences and studytime. 
+
+### sex
+- H0: there is no relationship between high_use and sex
+- H1: there is a relationship between high_use and sex
+```{r, echo= FALSE}
+alc %>% group_by(high_use, sex) %>% summarise(count = n())
+```
+Result above shows students of both sexes have low alcohol consumption, but males's consumption (72/184) are much higher than that in females (42/198). This support the alternative hypothesis. 
+
+### goout
+- H0: there is no relationship between high_use and goout
+- H1: there is a relationship between high_use and goout
+```{r, echo= FALSE}
+alc %>% group_by(high_use, goout) %>% summarise(count = n())
+```
+Result above indicates that students go out more also have higher rate of using alcohol. This support the alternative hypothesis.
+
+### absences
+- H0: there is no relationship between high_use and absences
+- H1: there is a relationship between high_use and absences
+```{r, echo= FALSE}
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_absences=mean(absences))
+```
+Result above suggests that high users having more absences. This support the alternative hypothesis. 
+
+### studytime
+- H0: there is no relationship between high_use and studytime
+- H1: there is a relationship between high_use and studytime
+```{r, echo= FALSE}
+alc %>% group_by(high_use) %>% summarise(count = n(), mean_weekly_study_time=mean(studytime))
+```
+Result above also sugggest that students are spent more time study are less likely to consume alcohol. This support the alternative hypothesis that there is a relationship between 2 variables, but it is a negative one.  
+
+## Logistic Regression and odds ratios
+
+```{r, echo= FALSE}
+# logistic regression model with all variables
+m1 <- glm(high_use ~ absences + studytime + goout + sex, data = alc, family = "binomial")
+#  a summary of the model
+summary(m1)
+# coefficients of the model
+coef(m1)
+# compute odds ratios (OR)
+OR <- coef(m1) %>% exp
+# compute confidence intervals (CI)
+CI <-confint(m1) %>% exp
+# print out the odds ratios with their confidence intervals
+cbind(OR, CI)
+```
+
+- All variables except studytime (p-value < 0.05) are statistically significant with p-value < 0.01:
+    + Students who have more absences are 1.08 times more likely to high_use.
+    + Those who study more are 0.66 times less likely to high_use. 
+    + Those who go out more often are 2.1 times more likely to high_use.
+    + Males are 2.2 times more likely to high_use than females. 
+
+
+
+
+## Predictive power, training error and cross-validation
+Statistically non-significant variable studytime is excluded from the model.
+
+```{r, echo= FALSE}
+# model with only statistically significant variables
+m2 <- glm(high_use ~ absences + goout + sex, data = alc, family = "binomial")
+summary(m2)
+# predict() the probability of high_use and add it in the data
+probabilities <- predict(m2, type = "response")
+alc <- mutate(alc, probability = probabilities)
+# use the probabilities to make a prediction of high_use
+alc <- mutate(alc, prediction = probability > 0.5)
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction)
+# tabulate the target variable versus the predictions
+table(high_use = alc$high_use, prediction = alc$prediction) %>% prop.table() %>% addmargins()
+## training error
+# define a loss function (mean prediction error)
+loss_func <- function(class, prob) {
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+loss_func(class = alc$high_use, prob = alc$probability)
+# 10-fold cross-validation 
+library(boot)
+cv <- cv.glm(data = alc, cost = loss_func, glmfit = m2, K = 10)
+# average number of wrong predictions in the cross validation
+cv$delta[1]
+```
+
+Training error of the model is 0.21, and by 10-fold cross-validation, the test error is approximately 0.22, lower than that in Datacamp (0.26)

@@ -153,6 +153,12 @@ $(document).ready(function () {
 <li><a href="#regression-analysis">Regression analysis</a></li>
 <li><a href="#model-validation">Model Validation</a></li>
 </ul></li>
+<li><a href="#chapter3-logistic-regression">Chapter3: Logistic Regression</a><ul>
+<li><a href="#overview-1">Overview</a></li>
+<li><a href="#hypotheses">Hypotheses</a></li>
+<li><a href="#logistic-regression-and-odds-ratios">Logistic Regression and odds ratios</a></li>
+<li><a href="#predictive-power-training-error-and-cross-validation">Predictive power, training error and cross-validation</a></li>
+</ul></li>
 </ul>
 </div>
 
@@ -331,6 +337,225 @@ summary(model2)</code></pre>
 <li>Residual vs leverage plot shows possible influential cases. Levarage plot shows that there is no influential case, and we can be more confident with our model.</li>
 </ul>
 <hr />
+</div>
+</div>
+<div id="chapter3-logistic-regression" class="section level1">
+<h1>Chapter3: Logistic Regression</h1>
+<pre><code>## 
+## Attaching package: 'dplyr'</code></pre>
+<pre><code>## The following object is masked from 'package:GGally':
+## 
+##     nasa</code></pre>
+<pre><code>## The following objects are masked from 'package:stats':
+## 
+##     filter, lag</code></pre>
+<pre><code>## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre><code>##  [1] &quot;school&quot;     &quot;sex&quot;        &quot;age&quot;        &quot;address&quot;    &quot;famsize&quot;   
+##  [6] &quot;Pstatus&quot;    &quot;Medu&quot;       &quot;Fedu&quot;       &quot;Mjob&quot;       &quot;Fjob&quot;      
+## [11] &quot;reason&quot;     &quot;nursery&quot;    &quot;internet&quot;   &quot;guardian&quot;   &quot;traveltime&quot;
+## [16] &quot;studytime&quot;  &quot;failures&quot;   &quot;schoolsup&quot;  &quot;famsup&quot;     &quot;paid&quot;      
+## [21] &quot;activities&quot; &quot;higher&quot;     &quot;romantic&quot;   &quot;famrel&quot;     &quot;freetime&quot;  
+## [26] &quot;goout&quot;      &quot;Dalc&quot;       &quot;Walc&quot;       &quot;health&quot;     &quot;absences&quot;  
+## [31] &quot;G1&quot;         &quot;G2&quot;         &quot;G3&quot;         &quot;alc_use&quot;    &quot;high_use&quot;</code></pre>
+<pre><code>## 'data.frame':    382 obs. of  35 variables:
+##  $ school    : Factor w/ 2 levels &quot;GP&quot;,&quot;MS&quot;: 1 1 1 1 1 1 1 1 1 1 ...
+##  $ sex       : Factor w/ 2 levels &quot;F&quot;,&quot;M&quot;: 1 1 1 1 1 2 2 1 2 2 ...
+##  $ age       : int  18 17 15 15 16 16 16 17 15 15 ...
+##  $ address   : Factor w/ 2 levels &quot;R&quot;,&quot;U&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ famsize   : Factor w/ 2 levels &quot;GT3&quot;,&quot;LE3&quot;: 1 1 2 1 1 2 2 1 2 1 ...
+##  $ Pstatus   : Factor w/ 2 levels &quot;A&quot;,&quot;T&quot;: 1 2 2 2 2 2 2 1 1 2 ...
+##  $ Medu      : int  4 1 1 4 3 4 2 4 3 3 ...
+##  $ Fedu      : int  4 1 1 2 3 3 2 4 2 4 ...
+##  $ Mjob      : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 1 1 1 2 3 4 3 3 4 3 ...
+##  $ Fjob      : Factor w/ 5 levels &quot;at_home&quot;,&quot;health&quot;,..: 5 3 3 4 3 3 3 5 3 3 ...
+##  $ reason    : Factor w/ 4 levels &quot;course&quot;,&quot;home&quot;,..: 1 1 3 2 2 4 2 2 2 2 ...
+##  $ nursery   : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 2 2 2 2 2 2 2 ...
+##  $ internet  : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 2 2 1 2 2 1 2 2 ...
+##  $ guardian  : Factor w/ 3 levels &quot;father&quot;,&quot;mother&quot;,..: 2 1 2 2 1 2 2 2 2 2 ...
+##  $ traveltime: int  2 1 1 1 1 1 1 2 1 1 ...
+##  $ studytime : int  2 2 2 3 2 2 2 2 2 2 ...
+##  $ failures  : int  0 0 2 0 0 0 0 0 0 0 ...
+##  $ schoolsup : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 1 2 1 1 1 1 2 1 1 ...
+##  $ famsup    : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 2 1 2 2 2 1 2 2 2 ...
+##  $ paid      : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 2 2 2 2 1 1 2 2 ...
+##  $ activities: Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 2 1 1 1 2 ...
+##  $ higher    : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ romantic  : Factor w/ 2 levels &quot;no&quot;,&quot;yes&quot;: 1 1 1 2 1 1 1 1 1 1 ...
+##  $ famrel    : int  4 5 4 3 4 5 4 4 4 5 ...
+##  $ freetime  : int  3 3 3 2 3 4 4 1 2 5 ...
+##  $ goout     : int  4 3 2 2 2 2 4 4 2 1 ...
+##  $ Dalc      : int  1 1 2 1 1 1 1 1 1 1 ...
+##  $ Walc      : int  1 1 3 1 2 2 1 1 1 1 ...
+##  $ health    : int  3 3 3 5 5 5 3 1 1 5 ...
+##  $ absences  : int  5 3 8 1 2 8 0 4 0 0 ...
+##  $ G1        : int  2 7 10 14 8 14 12 8 16 13 ...
+##  $ G2        : int  8 8 10 14 12 14 12 9 17 14 ...
+##  $ G3        : int  8 8 11 14 12 14 12 10 18 14 ...
+##  $ alc_use   : num  1 1 2.5 1 1.5 1.5 1 1 1 1 ...
+##  $ high_use  : logi  FALSE FALSE TRUE FALSE FALSE FALSE ...</code></pre>
+<div id="overview-1" class="section level2">
+<h2>Overview</h2>
+<p>Our data includes 35 variables with 385 observations. We want to study factors that might affect the study success. There are three types of variables: binary (marked with ‘logi’); numeric (marked with ‘num’ or ‘int’); nominal (marked with ‘factor’)</p>
+</div>
+<div id="hypotheses" class="section level2">
+<h2>Hypotheses</h2>
+<p>To study possible factors that might have relationship with high/low alcohol consumption, we selected four variables: sex, goout, absences and studytime.</p>
+<div id="sex" class="section level3">
+<h3>sex</h3>
+<ul>
+<li>H0: there is no relationship between high_use and sex</li>
+<li>H1: there is a relationship between high_use and sex</li>
+</ul>
+<pre><code>## Source: local data frame [4 x 3]
+## Groups: high_use [?]
+## 
+##   high_use    sex count
+##      &lt;lgl&gt; &lt;fctr&gt; &lt;int&gt;
+## 1    FALSE      F   156
+## 2    FALSE      M   112
+## 3     TRUE      F    42
+## 4     TRUE      M    72</code></pre>
+<p>Result above shows students of both sexes have low alcohol consumption, but males’s consumption (72/184) are much higher than that in females (42/198). This support the alternative hypothesis.</p>
+</div>
+<div id="goout" class="section level3">
+<h3>goout</h3>
+<ul>
+<li>H0: there is no relationship between high_use and goout</li>
+<li>H1: there is a relationship between high_use and goout</li>
+</ul>
+<pre><code>## Source: local data frame [10 x 3]
+## Groups: high_use [?]
+## 
+##    high_use goout count
+##       &lt;lgl&gt; &lt;int&gt; &lt;int&gt;
+## 1     FALSE     1    19
+## 2     FALSE     2    84
+## 3     FALSE     3   103
+## 4     FALSE     4    41
+## 5     FALSE     5    21
+## 6      TRUE     1     3
+## 7      TRUE     2    16
+## 8      TRUE     3    23
+## 9      TRUE     4    40
+## 10     TRUE     5    32</code></pre>
+<p>Result above indicates that students go out more also have higher rate of using alcohol. This support the alternative hypothesis.</p>
+</div>
+<div id="absences" class="section level3">
+<h3>absences</h3>
+<ul>
+<li>H0: there is no relationship between high_use and absences</li>
+<li>H1: there is a relationship between high_use and absences</li>
+</ul>
+<pre><code>## # A tibble: 2 × 3
+##   high_use count mean_absences
+##      &lt;lgl&gt; &lt;int&gt;         &lt;dbl&gt;
+## 1    FALSE   268      3.705224
+## 2     TRUE   114      6.368421</code></pre>
+<p>Result above suggests that high users having more absences. This support the alternative hypothesis.</p>
+</div>
+<div id="studytime" class="section level3">
+<h3>studytime</h3>
+<ul>
+<li>H0: there is no relationship between high_use and studytime</li>
+<li>H1: there is a relationship between high_use and studytime</li>
+</ul>
+<pre><code>## # A tibble: 2 × 3
+##   high_use count mean_weekly_study_time
+##      &lt;lgl&gt; &lt;int&gt;                  &lt;dbl&gt;
+## 1    FALSE   268               2.149254
+## 2     TRUE   114               1.771930</code></pre>
+<p>Result above also sugggest that students are spent more time study are less likely to consume alcohol. This support the alternative hypothesis that there is a relationship between 2 variables, but it is a negative one.</p>
+</div>
+</div>
+<div id="logistic-regression-and-odds-ratios" class="section level2">
+<h2>Logistic Regression and odds ratios</h2>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ absences + studytime + goout + sex, 
+##     family = &quot;binomial&quot;, data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.9103  -0.7892  -0.5021   0.7574   2.6021  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -3.20483    0.59429  -5.393 6.94e-08 ***
+## absences     0.07811    0.02244   3.481 0.000499 ***
+## studytime   -0.42116    0.17058  -2.469 0.013551 *  
+## goout        0.72677    0.11994   6.059 1.37e-09 ***
+## sexM         0.78173    0.26555   2.944 0.003242 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 381.31  on 377  degrees of freedom
+## AIC: 391.31
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>## (Intercept)    absences   studytime       goout        sexM 
+## -3.20483157  0.07810746 -0.42116184  0.72676824  0.78173290</code></pre>
+<pre><code>## Waiting for profiling to be done...</code></pre>
+<pre><code>##                     OR      2.5 %    97.5 %
+## (Intercept) 0.04056573 0.01222314 0.1263579
+## absences    1.08123884 1.03577383 1.1324143
+## studytime   0.65628388 0.46510383 0.9099505
+## goout       2.06838526 1.64470314 2.6349716
+## sexM        2.18525582 1.30370562 3.7010763</code></pre>
+<ul>
+<li>All variables except studytime (p-value &lt; 0.05) are statistically significant with p-value &lt; 0.01:
+<ul>
+<li>Students who have more absences are 1.08 times more likely to high_use.</li>
+<li>Those who study more are 0.66 times less likely to high_use.</li>
+<li>Those who go out more often are 2.1 times more likely to high_use.</li>
+<li>Males are 2.2 times more likely to high_use than females.</li>
+</ul></li>
+</ul>
+</div>
+<div id="predictive-power-training-error-and-cross-validation" class="section level2">
+<h2>Predictive power, training error and cross-validation</h2>
+<p>Statistically non-significant variable studytime is excluded from the model.</p>
+<pre><code>## 
+## Call:
+## glm(formula = high_use ~ absences + goout + sex, family = &quot;binomial&quot;, 
+##     data = alc)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -1.7871  -0.8153  -0.5446   0.8357   2.4740  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)    
+## (Intercept) -4.16317    0.47506  -8.764  &lt; 2e-16 ***
+## absences     0.08418    0.02237   3.764 0.000167 ***
+## goout        0.72981    0.11970   6.097 1.08e-09 ***
+## sexM         0.95872    0.25459   3.766 0.000166 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 465.68  on 381  degrees of freedom
+## Residual deviance: 387.75  on 378  degrees of freedom
+## AIC: 395.75
+## 
+## Number of Fisher Scoring iterations: 4</code></pre>
+<pre><code>##         prediction
+## high_use FALSE TRUE
+##    FALSE   253   15
+##    TRUE     65   49</code></pre>
+<pre><code>##         prediction
+## high_use      FALSE       TRUE        Sum
+##    FALSE 0.66230366 0.03926702 0.70157068
+##    TRUE  0.17015707 0.12827225 0.29842932
+##    Sum   0.83246073 0.16753927 1.00000000</code></pre>
+<pre><code>## [1] 0.2094241</code></pre>
+<pre><code>## [1] 0.2251309</code></pre>
+<p>Training error of the model is 0.21, and by 10-fold cross-validation, the test error is approximately 0.22, lower than that in Datacamp (0.26)</p>
 </div>
 </div>
 
